@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "testutil.h"
-#include "piexecutor.h"
+#include "executor.h"
 
 using ::testing::_;
 using ::testing::SetArgReferee;
@@ -40,7 +40,7 @@ public:
     MOCK_METHOD0(join, void());
 };
 
-class MockDeque : public PIBlockingDequeue<FunctionWrapper> {
+class MockDeque : public BlockingDequeue<FunctionWrapper> {
 public:
     MOCK_METHOD1(offer, bool(const FunctionWrapper&));
     MOCK_METHOD0(take, FunctionWrapper());
@@ -49,14 +49,14 @@ public:
     MOCK_METHOD0(remainingCapacity, size_t());
 };
 
-typedef PIThreadPoolExecutorTemplate<NiceMock<MockThread>, MockDeque> PIThreadPoolExecutorMoc_t;
+typedef ThreadPoolExecutorTemplate<NiceMock<MockThread>, MockDeque> ThreadPoolExecutorMoc_t;
 
-class PIThreadPoolExecutorMoc : public PIThreadPoolExecutorMoc_t {
+class ThreadPoolExecutorMoc : public ThreadPoolExecutorMoc_t {
 public:
-	explicit PIThreadPoolExecutorMoc(size_t corePoolSize) : PIThreadPoolExecutorMoc_t(corePoolSize) { }
+	explicit ThreadPoolExecutorMoc(size_t corePoolSize) : ThreadPoolExecutorMoc_t(corePoolSize) { }
 
 	template<typename Function>
-	explicit PIThreadPoolExecutorMoc(size_t corePoolSize, Function onBeforeStart) : PIThreadPoolExecutorMoc_t(corePoolSize, onBeforeStart) { }
+	explicit ThreadPoolExecutorMoc(size_t corePoolSize, Function onBeforeStart) : ThreadPoolExecutorMoc_t(corePoolSize, onBeforeStart) { }
 
 	std::vector<testing::NiceMock<MockThread>*>* getThreadPool() { return &threadPool; }
 	bool isShutdown() { return thread_command_ != thread_command::run; }
@@ -64,18 +64,18 @@ public:
 };
 
 TEST(ExecutorUnitTest, is_corePool_created) {
-	PIThreadPoolExecutorMoc executor(THREAD_COUNT);
+	ThreadPoolExecutorMoc executor(THREAD_COUNT);
     ASSERT_EQ(THREAD_COUNT, executor.getThreadPool()->size());
 }
 
 TEST(ExecutorUnitTest, is_corePool_started) {
-	PIThreadPoolExecutorMoc executor(THREAD_COUNT);
+	ThreadPoolExecutorMoc executor(THREAD_COUNT);
 	for (auto* thread : *executor.getThreadPool()) ASSERT_TRUE(thread->is_executed);
 }
 
 TEST(ExecutorUnitTest, submit_is_added_to_taskQueue) {
 	VoidFunc voidFunc = [](){};
-	PIThreadPoolExecutorMoc executor(THREAD_COUNT);
+	ThreadPoolExecutorMoc executor(THREAD_COUNT);
 	// TODO add check of offered
 	EXPECT_CALL(*executor.getTaskQueue(), offer)
 			.WillOnce(Return(true));
@@ -84,7 +84,7 @@ TEST(ExecutorUnitTest, submit_is_added_to_taskQueue) {
 
 TEST(ExecutorUnitTest, submit_is_return_valid_future) {
 	VoidFunc voidFunc = [](){};
-	PIThreadPoolExecutorMoc executor(THREAD_COUNT);
+	ThreadPoolExecutorMoc executor(THREAD_COUNT);
 	// TODO add check of offered
 	EXPECT_CALL(*executor.getTaskQueue(), offer)
 			.WillOnce(Return(true));
@@ -94,7 +94,7 @@ TEST(ExecutorUnitTest, submit_is_return_valid_future) {
 
 TEST(ExecutorUnitTest, execute_is_added_to_taskQueue) {
     VoidFunc voidFunc = [](){};
-	PIThreadPoolExecutorMoc executor(THREAD_COUNT);
+	ThreadPoolExecutorMoc executor(THREAD_COUNT);
 	// TODO add check of offered
 	EXPECT_CALL(*executor.getTaskQueue(), offer)
 			.WillOnce(Return(true));
@@ -104,7 +104,7 @@ TEST(ExecutorUnitTest, execute_is_added_to_taskQueue) {
 // TODO fix
 TEST(DISABLED_ExecutorUnitTest, is_corePool_execute_queue_elements) {
 	bool is_executed = false;
-	PIThreadPoolExecutorMoc executor(1);
+	ThreadPoolExecutorMoc executor(1);
 	EXPECT_EQ(executor.getThreadPool()->size(), 1);
 		EXPECT_CALL(*executor.getTaskQueue(), poll(Ge(0)))
 			.WillOnce([&is_executed](int){
@@ -117,7 +117,7 @@ TEST(DISABLED_ExecutorUnitTest, is_corePool_execute_queue_elements) {
 // FIXME
 TEST(DISABLED_ExecutorUnitTest, shutdown_is_stop_threads) {
 	// Exclude stop calls when executor deleting
-	auto* executor = new PIThreadPoolExecutorMoc(THREAD_COUNT, [](MockThread* thread){
+	auto* executor = new ThreadPoolExecutorMoc(THREAD_COUNT, [](MockThread* thread){
 		testing::Mock::AllowLeak(thread);
 		EXPECT_CALL(*thread, join())
 				.WillOnce(Return());

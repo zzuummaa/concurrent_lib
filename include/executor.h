@@ -1,26 +1,7 @@
-/*
-	PIP - Platform Independent Primitives
-	
-	Stephan Fomenko
+#ifndef EXECUTOR_H
+#define EXECUTOR_H
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Lesser General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Lesser General Public License for more details.
-
-	You should have received a copy of the GNU Lesser General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef PIEXECUTOR_H
-#define PIEXECUTOR_H
-
-#include "piblockingdequeue.h"
+#include "blockingdequeue.h"
 #include <atomic>
 #include <future>
 
@@ -62,8 +43,8 @@ public:
 	FunctionWrapper& operator=(const FunctionWrapper&) = delete;
 };
 
-template <typename Thread_ = std::thread, typename Dequeue_ = PIBlockingDequeue<FunctionWrapper>>
-class PIThreadPoolExecutorTemplate {
+template <typename Thread_ = std::thread, typename Dequeue_ = BlockingDequeue<FunctionWrapper>>
+class ThreadPoolExecutorTemplate {
 protected:
 	enum thread_command {
 		run,
@@ -72,9 +53,9 @@ protected:
 	};
 
 public:
-	explicit PIThreadPoolExecutorTemplate(size_t corePoolSize = 1) : thread_command_(thread_command::run) { makePool(corePoolSize); }
+	explicit ThreadPoolExecutorTemplate(size_t corePoolSize = 1) : thread_command_(thread_command::run) { makePool(corePoolSize); }
 
-	virtual ~PIThreadPoolExecutorTemplate() {
+	virtual ~ThreadPoolExecutorTemplate() {
 		shutdownNow();
 		awaitTermination(1000);
 		while (threadPool.size() > 0) {
@@ -139,7 +120,7 @@ protected:
 	std::vector<Thread_*> threadPool;
 
 	template<typename Function>
-	PIThreadPoolExecutorTemplate(size_t corePoolSize, Function&& onBeforeStart) : thread_command_(thread_command::run) {
+	ThreadPoolExecutorTemplate(size_t corePoolSize, Function&& onBeforeStart) : thread_command_(thread_command::run) {
 		makePool(corePoolSize, std::forward<Function>(onBeforeStart));
 	}
 
@@ -159,7 +140,7 @@ protected:
 	}
 };
 
-typedef PIThreadPoolExecutorTemplate<> PIThreadPoolExecutor;
+typedef ThreadPoolExecutorTemplate<> ThreadPoolExecutor;
 
 #ifdef DOXYGEN
 /**
@@ -167,11 +148,11 @@ typedef PIThreadPoolExecutorTemplate<> PIThreadPoolExecutor;
  * numbers of asynchronous tasks, due to reduced per-task invocation overhead, and they provide a means of bounding and
  * managing the resources, including threads, consumed when executing a collection of tasks.
  */
-class PIThreadPoolExecutor {
+class ThreadPoolExecutor {
 public:
-	explicit PIThreadPoolExecutor(size_t corePoolSize);
+	explicit ThreadPoolExecutor(size_t corePoolSize);
 
-	virtual ~PIThreadPoolExecutor();
+	virtual ~ThreadPoolExecutor();
 
 	/**
 	 * @brief Submits a Runnable task for execution and returns a Future representing that task. The Future's get method
@@ -211,4 +192,4 @@ public:
 };
 #endif //DOXYGEN
 
-#endif //PIEXECUTOR_H
+#endif //EXECUTOR_H

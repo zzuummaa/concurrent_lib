@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "testutil.h"
-#include "piexecutor.h"
+#include "executor.h"
 
 using namespace std;
 using namespace chrono;
@@ -8,7 +8,7 @@ using namespace chrono;
 TEST(ExcutorIntegrationTest, execute_is_runnable_invoke) {
     std::mutex m;
     int invokedRunnables = 0;
-    PIThreadPoolExecutor executorService(1);
+    ThreadPoolExecutor executorService(1);
 	executorService.execute([&]() {
         m.lock();
         invokedRunnables++;
@@ -22,7 +22,7 @@ TEST(ExcutorIntegrationTest, execute_is_runnable_invoke) {
 
 TEST(ExcutorIntegrationTest, execute_is_not_execute_after_shutdown) {
     volatile bool isRunnableInvoke = false;
-    PIThreadPoolExecutor executorService(1);
+    ThreadPoolExecutor executorService(1);
     executorService.shutdown();
     executorService.execute([&]() {
         isRunnableInvoke = true;
@@ -33,7 +33,7 @@ TEST(ExcutorIntegrationTest, execute_is_not_execute_after_shutdown) {
 
 TEST(ExcutorIntegrationTest, execute_is_execute_before_shutdown) {
 	volatile bool isRunnableInvoke = false;
-    PIThreadPoolExecutor executorService(1);
+    ThreadPoolExecutor executorService(1);
     executorService.execute([&]() {
 		this_thread::sleep_for(milliseconds(WAIT_THREAD_TIME_MS));
         isRunnableInvoke = true;
@@ -45,7 +45,7 @@ TEST(ExcutorIntegrationTest, execute_is_execute_before_shutdown) {
 
 // FIXME
 TEST(DISABLED_ExcutorIntegrationTest, execute_is_awaitTermination_wait) {
-    PIThreadPoolExecutor executorService(1);
+    ThreadPoolExecutor executorService(1);
     executorService.execute([&]() {
 		this_thread::sleep_for(milliseconds(2 * WAIT_THREAD_TIME_MS));
     });

@@ -1,24 +1,5 @@
-/*
-	PIP - Platform Independent Primitives
-	
-	Stephan Fomenko
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Lesser General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Lesser General Public License for more details.
-
-	You should have received a copy of the GNU Lesser General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef PIBLOCKINGDEQUEUE_H
-#define PIBLOCKINGDEQUEUE_H
+#ifndef BLOCKINGDEQUEUE_H
+#define BLOCKINGDEQUEUE_H
 
 #include <queue>
 #include <condition_variable>
@@ -28,14 +9,14 @@
  * wait for space to become available in the queue when storing an element.
  */
 template <typename T, template<typename = T, typename...> class Queue_ = std::deque, typename ConditionVariable_ = std::condition_variable>
-class PIBlockingDequeue {
+class BlockingDequeue {
 public:
 	typedef Queue_<T> QueueType;
 
 	/**
 	 * @brief Constructor
 	 */
-	explicit PIBlockingDequeue(size_t capacity = SIZE_MAX)
+	explicit BlockingDequeue(size_t capacity = SIZE_MAX)
 			: cond_var_add(new ConditionVariable_()), cond_var_rem(new ConditionVariable_()), max_size(capacity) { }
 
 	/**
@@ -43,7 +24,7 @@ public:
 	 */
 	template<typename Iterable,
 			 typename std::enable_if<!std::is_arithmetic<Iterable>::value, int>::type = 0>
-	explicit PIBlockingDequeue(const Iterable& other): PIBlockingDequeue() {
+	explicit BlockingDequeue(const Iterable& other): BlockingDequeue() {
 		mutex.lock();
 		for (const T& t : other) data_queue.push_back(t);
 		mutex.unlock();
@@ -52,7 +33,7 @@ public:
 	/**
 	 * @brief Thread-safe copy constructor. Initialize queue with copy of other queue elements.
 	 */
-	explicit PIBlockingDequeue(PIBlockingDequeue<T>& other): PIBlockingDequeue() {
+	explicit BlockingDequeue(BlockingDequeue<T>& other): BlockingDequeue() {
 		other.mutex.lock();
 		mutex.lock();
 		max_size = other.max_size;
@@ -61,7 +42,7 @@ public:
 		other.mutex.unlock();
 	}
 
-	~PIBlockingDequeue() {
+	~BlockingDequeue() {
 		delete cond_var_add;
 		delete cond_var_rem;
 	}
@@ -244,7 +225,7 @@ public:
 	/**
 	 * @brief Removes all available elements from this queue and adds them to other given queue.
 	 */
-	size_t drainTo(PIBlockingDequeue<T>& other, size_t maxCount = SIZE_MAX) {
+	size_t drainTo(BlockingDequeue<T>& other, size_t maxCount = SIZE_MAX) {
 		mutex.lock();
 		other.mutex.lock();
 		size_t count = maxCount > data_queue.size() ? data_queue.size() : maxCount;
@@ -269,4 +250,4 @@ protected:
 };
 
 
-#endif // PIBLOCKINGDEQUEUE_H
+#endif // BLOCKINGDEQUEUE_H

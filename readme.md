@@ -33,6 +33,14 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --target install
 ```
 
+4 Use in your project cmake files:
+
+```cmake
+find_package(Concurrent REQUIRED)
+add_executable(your_app ${YOUR_SOURCES})
+target_link_libraries(your_app concurrent)
+```
+
 ## Build tests
 
 1 Clone GTest:

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "testutil.h"
-#include "piblockingdequeue.h"
+#include "blockingdequeue.h"
 
 using ::testing::_;
 using ::testing::Return;
@@ -77,15 +77,15 @@ public:
 template<typename T>
 class MockDeque: public NiceMock<MockDequeBase<T>> {};
 
-class PIBlockingDequeuePrepare: public PIBlockingDequeue<QueueElement, MockDeque, NiceMock<MockConditionVar>> {
+class BlockingDequeuePrepare: public BlockingDequeue<QueueElement, MockDeque, NiceMock<MockConditionVar>> {
 public:
-	typedef PIBlockingDequeue<QueueElement, MockDeque, NiceMock<MockConditionVar>> SuperClass;
+	typedef BlockingDequeue<QueueElement, MockDeque, NiceMock<MockConditionVar>> SuperClass;
 
-	explicit PIBlockingDequeuePrepare(size_t capacity = SIZE_MAX): SuperClass(capacity) { }
+	explicit BlockingDequeuePrepare(size_t capacity = SIZE_MAX): SuperClass(capacity) { }
 
 	template<typename Iterable,
 	         typename std::enable_if<!std::is_arithmetic<Iterable>::value, int>::type = 0>
-	explicit PIBlockingDequeuePrepare(const Iterable& other): SuperClass(other) { }
+	explicit BlockingDequeuePrepare(const Iterable& other): SuperClass(other) { }
 
 	MockConditionVar* getCondVarAdd() { return this->cond_var_add; }
 	MockConditionVar* getCondVarRem() { return this->cond_var_rem; }
@@ -97,7 +97,7 @@ class BlockingDequeueUnitTest: public ::testing::Test {
 public:
 	int timeout = 100;
 	size_t capacity;
-	PIBlockingDequeuePrepare dequeue;
+	BlockingDequeuePrepare dequeue;
 	QueueElement element;
 
 	BlockingDequeueUnitTest(): capacity(1), dequeue(capacity), element(11) {}
@@ -108,12 +108,12 @@ public:
 };
 
 TEST_F(BlockingDequeueUnitTest, construct_default_is_max_size_eq_size_max) {
-	PIBlockingDequeuePrepare dequeue;
+	BlockingDequeuePrepare dequeue;
 	ASSERT_EQ(dequeue.getMaxSize(), SIZE_MAX);
 }
 
 TEST_F(BlockingDequeueUnitTest, construct_from_constant_is_max_size_eq_capacity) {
-	PIBlockingDequeuePrepare dequeue(2);
+	BlockingDequeuePrepare dequeue(2);
 	ASSERT_EQ(dequeue.getMaxSize(), 2);
 }
 
@@ -125,7 +125,7 @@ TEST_F(BlockingDequeueUnitTest, construct_from_iterable) {
 	std::vector<QueueElement> iterable;
 	iterable.emplace_back(11);
 	iterable.emplace_back(22);
-	PIBlockingDequeuePrepare dequeue(iterable);
+	BlockingDequeuePrepare dequeue(iterable);
 }
 
 void BlockingDequeueUnitTest::put_is_wait_predicate(bool isCapacityReach) {
