@@ -10,7 +10,7 @@ Testing Technology team with Google's specific requirements and constraints in m
 - `CONCURRENT_TESTING` - enable build tests
 - `CONCURRENT_EXAMPLES`- enable build examples
 
-## Use from another project
+## Build library
 
 1 Clone project:
 
@@ -52,7 +52,7 @@ git clone --branch v1.10.x https://github.com/google/googletest.git
 2 Generate cmake files:
 
 ```cmd
-cd concurrent
+cd googletest
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -62,3 +62,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 ```cmd
 cmake --build . --target install
 ```
+
+4 Check cmake output. GTest and GMock libs should be installed;
+
+5 Remove `FindGTest.cmake` from `<cmake_dir>/modules`.
